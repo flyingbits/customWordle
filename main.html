@@ -16,7 +16,11 @@
 </head>
 <body>
     <!-- MAIN CANVAS -->
-    <canvas id="canvas" style="border: 1px solid black"></canvas>
+    <canvas id="canvas" style="align-self: center"></canvas>
+    <!-- DOWNLOAD TEXT FILE POPUP -->
+    <div hidden id="notification" style="width: 520px; height: 70px; background: linear-gradient(180deg, pink 0%, deeppink 100%);">
+        <p></p>
+    </div>
     <script>
         // Initialize canvas
         const canvas = document.getElementById("canvas");
@@ -26,14 +30,15 @@
         ctx.font = "50px Courier New";
         ctx.textAlign = "center";
 
+        const notifications = document.getElementById("notification");
+        notifications.ticks = 0;
+
         // Add events
         window.onkeydown = addText;
         //window.onresize = function(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;drawBoxes()}
 
         // Load words
-        const wordsFile = document.getElementById("words.txt");
         const availableKeys = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const words = ["tests", "words", "congo"];
 
         // Load gradients
         const GRADIENTS = {
@@ -49,12 +54,47 @@
         GRADIENTS.RED.addColorStop(1, "darkred");
 
         // Load variables
-        let keyWord = "congo";
+        const keyWords = [
+            "basin",
+            "congo",
+            "river",
+            "trade",
+            "water",
+            "niger",
+            "coast",
+            "lakes",
+            "north",
+            "south",
+            "ogowe",
+            "flags",
+            "taxes",
+            "power",
+            "right",
+            "slave",
+            "ocean",
+        ];
+        //let keyWord = keyWords[Math.floor(Math.random()*keyWords.length)];
+        let keyWord = "guess";
         let wordLength = 5;
         let maxTries = 6;
         let rows = [];
         let word = "";
 
+
+        /*
+        Display notification for client
+         */
+        function alert(text, background) {
+            notifications.hidden = false;
+            notifications.firstChild.textContent = text;
+            notifications.ticks++;
+            setTimeout(() => {
+                notifications.ticks--;
+                if (notifications.ticks === 0) {
+                    notifications.hidden = true;
+                }
+            }, 3000);
+        }
 
         /*
         Called when key is pressed
@@ -63,6 +103,10 @@
         Any other characters in available keys are added
          */
         function addText(e) {
+            if (rows.length >= maxTries) {
+                alert("You have reached the maximum amount of tries.");
+                return;
+            }
             switch (e.key) {
                 case "Backspace":
                     if (word.length > 0) {
