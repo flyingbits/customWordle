@@ -10,13 +10,19 @@
             padding: 0;
             overflow: hidden;
         }
+        canvas, div {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
     <!-- MAIN SCRIPT -->
     <!-- <script src="main.js" type="text/javascript" defer></script> -->
 </head>
 <body>
     <!-- MAIN CANVAS -->
-    <canvas id="canvas" style="align-self: center"></canvas>
+    <canvas id="canvas" style="display: block"></canvas>
     <!-- DOWNLOAD TEXT FILE POPUP -->
     <div hidden id="notification" style="width: 520px; height: 70px; background: linear-gradient(180deg, pink 0%, deeppink 100%);">
         <p></p>
@@ -74,11 +80,12 @@
             "ocean",
         ];
         //let keyWord = keyWords[Math.floor(Math.random()*keyWords.length)];
-        let keyWord = "guess";
+        let keyWord = keyWords[Math.floor(Math.random()*keyWords.length)];
         let wordLength = 5;
         let maxTries = 6;
         let rows = [];
         let word = "";
+        let hasKeyWord = false;
 
 
         /*
@@ -104,7 +111,7 @@
          */
         function addText(e) {
             if (rows.length >= maxTries) {
-                alert("You have reached the maximum amount of tries.");
+                alert("Press ENTER to play again.");
                 return;
             }
             switch (e.key) {
@@ -115,8 +122,17 @@
                     }
                     return;
                 case "Enter":
+                    if (rows.length >= maxTries || hasKeyWord) {
+                        drawBoxes();
+                        notifications.hidden = true;
+                        keyWord = keyWords[Math.floor(Math.random()*keyWords.length)];
+                        word = "";
+                        rows = [];
+                        return;
+                    }
                     const wordResults = checkWord(word);
                     if (wordResults[0]) {
+                        let skipped = [];
                         for (let i = 0; i < wordLength; i++) {
                             let char = word.charAt(i);
                             let color = "#fff";
@@ -124,7 +140,12 @@
                                 if (char === keyWord.charAt(i)) {
                                     color = GRADIENTS.GREEN;
                                 } else {
-                                    color = GRADIENTS.YELLOW;
+                                    if ((word.split(char)).length - skipped.filter(i => i[0] === char).length <= (keyWord.split(char)).length) {
+                                        color = GRADIENTS.YELLOW;
+                                    } else {
+                                         skipped.push([char, i]);
+                                         continue;
+                                    }
                                 }
                             } else {
                                 color = GRADIENTS.RED;
@@ -132,10 +153,19 @@
                             drawBox(i, rows.length, word.charAt(i), color);
                         }
                         if (word === keyWord) {
-                            alert("You guessed the word!");
+                            hasKeyWord = true;
+                            displayAnswer();
+                            alert("Press ENTER to play again.");
                         }
+                        skipped.forEach((skip) => {
+                            drawBox(skip[1], rows.length, skip[0], GRADIENTS.RED);
+                        });
                         rows.push(word);
                         word = "";
+                        if (rows.length >= maxTries) {
+                            displayAnswer();
+                            return;
+                        }
                     } else {
                         alert(wordResults[1]);
                     }
@@ -153,12 +183,27 @@
         }
 
         /*
+        Display the correct answer
+         */
+        function displayAnswer() {
+            ctx.fillStyle = "#777";
+            ctx.fillRect(canvas.width/6+10, canvas.height/3+10, canvas.width/3*2, canvas.height/3);
+            ctx.fillStyle = "#aaa";
+            ctx.fillRect(canvas.width/6, canvas.height/3, canvas.width/3*2, canvas.height/3);
+            ctx.fillStyle = "#fff";
+            ctx.fillText("THE WORD WAS", canvas.width/2, canvas.height/2-30);
+            ctx.fillText(keyWord, canvas.width/2, canvas.height/2+50);
+
+
+        }
+
+        /*
         Checks if word meets requirements
          */
         function checkWord(w) {
             if (w.length !== wordLength) return [false, "Word is not "+wordLength+" characters long."];
             return [true];
-            if (words.indexOf(w) === -1) return [false, "Word is unavailable."];
+            if (rows.indexOf(w) === -1) return [false, "Word is unavailable."];
             return [true, "Good job."];
         }
 
